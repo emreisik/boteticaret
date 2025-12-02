@@ -1,0 +1,61 @@
+#!/bin/bash
+# Windows Sunucuya Hızlı Deploy
+# Kullanım: ./deploy-now.sh
+
+SERVER_IP="77.245.158.179"
+SERVER_PORT="33789"
+SERVER_USER="Administrator"
+SERVER_PATH="C:/inetpub/wwwroot"
+
+echo "🚀 Windows Sunucuya Deploy Başlatılıyor..."
+echo "📡 Sunucu: $SERVER_IP:$SERVER_PORT"
+echo ""
+
+# SSH ile bağlan
+ssh -p $SERVER_PORT $SERVER_USER@$SERVER_IP << 'ENDSSH'
+# Proje klasörüne git
+cd C:/inetpub/wwwroot
+
+# Eğer klasör yoksa klonla
+if [ ! -d "boteticaret" ]; then
+    echo "📥 Proje klonlanıyor..."
+    git clone https://github.com/emreisik/boteticaret.git
+    cd boteticaret
+else
+    echo "📥 Proje güncelleniyor..."
+    cd boteticaret
+    git pull origin master
+fi
+
+# Bağımlılıkları yükle
+echo "📦 Bağımlılıklar yükleniyor..."
+npm install
+
+# Prisma
+echo "🗄️ Prisma client generate ediliyor..."
+npx prisma generate
+
+# Migration
+echo "🔄 Database migration çalıştırılıyor..."
+npx prisma migrate deploy
+
+# Build
+echo "🔨 Build yapılıyor..."
+npm run build
+
+# PM2 ile restart (eğer varsa)
+if command -v pm2 &> /dev/null; then
+    echo "🔄 PM2 ile restart yapılıyor..."
+    pm2 restart boteticaret || pm2 start npm --name "boteticaret" -- start
+    pm2 restart telegram-bot || pm2 start npm --name "telegram-bot" -- run bot
+else
+    echo "⚠️ PM2 bulunamadı. Manuel başlatın: npm start"
+fi
+
+echo "✅ Deploy tamamlandı!"
+ENDSSH
+
+echo ""
+echo "✅ Deploy işlemi tamamlandı!"
+echo "🌐 Site: http://$SERVER_IP:3000"
+
