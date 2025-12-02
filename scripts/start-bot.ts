@@ -1,9 +1,10 @@
 import 'dotenv/config'
-import bot from '../lib/telegram'
+import { getBot } from '../lib/telegram'
 
 // Telegram bot'u polling modunda başlat
 // Webhook kullanmıyorsanız bu script'i kullanabilirsiniz
 if (process.env.TELEGRAM_BOT_TOKEN) {
+  const bot = getBot()
   bot.launch()
   console.log('Telegram bot başlatıldı!')
   

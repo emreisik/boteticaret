@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bot from '@/lib/telegram'
+import { getBot } from '@/lib/telegram'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const bot = getBot()
     await bot.handleUpdate(body)
     return NextResponse.json({ ok: true })
   } catch (error) {

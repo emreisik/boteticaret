@@ -3,11 +3,8 @@ import { prisma } from './prisma'
 import fs from 'fs-extra'
 import path from 'path'
 
-if (!process.env.TELEGRAM_BOT_TOKEN) {
-  throw new Error('TELEGRAM_BOT_TOKEN is not set')
-}
-
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
+// Bot'u lazy load et - sadece runtime'da yükle
+let botInstance: Telegraf | null = null
 
 // Yetkili kullanıcı ID'si
 const AUTHORIZED_USER_ID = 1682856257
@@ -22,7 +19,7 @@ const userPhotos = new Map<number, string>()
 const userBrandLogos = new Map<number, string>()
 
 // Fotoğraf ile ürün ekleme fonksiyonu
-async function addProductFromPhoto(ctx: Context, photo: { file_id: string }, commandText: string) {
+async function addProductFromPhoto(ctx: Context, photo: { file_id: string }, commandText: string, bot: Telegraf) {
   try {
     const args = commandText.split(' ').slice(1)
     
@@ -99,7 +96,7 @@ async function addProductFromPhoto(ctx: Context, photo: { file_id: string }, com
 }
 
 // Marka logosu ekleme fonksiyonu
-async function addBrandLogo(ctx: Context, photo: { file_id: string }, brandName: string) {
+async function addBrandLogo(ctx: Context, photo: { file_id: string }, brandName: string, bot: Telegraf) {
   try {
     // Markayı bul (case-insensitive)
     const allBrands = await prisma.brand.findMany()
@@ -149,157 +146,174 @@ async function addBrandLogo(ctx: Context, photo: { file_id: string }, brandName:
   }
 }
 
-// Fotoğraf gönderildiğinde (caption ile komut varsa)
-bot.on('photo', async (ctx) => {
-  const userId = ctx.from?.id
-  if (!userId) return
-  
-  // Yetkilendirme kontrolü
-  if (!isAuthorized(userId)) {
-    return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
-  }
+// Bot handler'larını kur
+function setupBotHandlers(bot: Telegraf) {
+  // Fotoğraf gönderildiğinde (caption ile komut varsa)
+  bot.on('photo', async (ctx) => {
+    const userId = ctx.from?.id
+    if (!userId) return
+    
+    // Yetkilendirme kontrolü
+    if (!isAuthorized(userId)) {
+      return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
+    }
 
-  // En yüksek çözünürlüklü fotoğrafı al
-  const photo = ctx.message.photo[ctx.message.photo.length - 1]
-  userPhotos.set(userId, photo.file_id)
-  userBrandLogos.set(userId, photo.file_id)
+    // En yüksek çözünürlüklü fotoğrafı al
+    const photo = ctx.message.photo[ctx.message.photo.length - 1]
+    userPhotos.set(userId, photo.file_id)
+    userBrandLogos.set(userId, photo.file_id)
 
-  // Eğer caption'da komut varsa işle
-  const caption = ctx.message.caption
-  if (caption && caption.startsWith('/urun')) {
-    await addProductFromPhoto(ctx, photo, caption)
+    // Eğer caption'da komut varsa işle
+    const caption = ctx.message.caption
+    if (caption && caption.startsWith('/urun')) {
+      await addProductFromPhoto(ctx, photo, caption, bot)
+      userPhotos.delete(userId)
+    } else if (caption && caption.startsWith('/logo')) {
+      const brandName = caption.split(' ').slice(1).join(' ')
+      if (brandName) {
+        await addBrandLogo(ctx, photo, brandName, bot)
+        userBrandLogos.delete(userId)
+      }
+    }
+  })
+
+  // Ürün ekleme komutu: /urun <marka> <kategori> <isim> <fiyat>
+  bot.command('urun', async (ctx) => {
+    const userId = ctx.from?.id
+    if (!userId) return
+    
+    // Yetkilendirme kontrolü
+    if (!isAuthorized(userId)) {
+      return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
+    }
+
+    // Son gönderilen fotoğrafı kontrol et
+    const lastPhotoId = userPhotos.get(userId)
+    
+    if (!lastPhotoId) {
+      return ctx.reply('Lütfen önce bir fotoğraf gönderin, sonra komutu yazın.\n\nVeya fotoğraf gönderirken caption olarak komutu yazabilirsiniz:\n/urun Nike Ayakkabı Nike Air Max 5000')
+    }
+
+    // Son fotoğrafı al
+    const photo = { file_id: lastPhotoId }
+    await addProductFromPhoto(ctx, photo, ctx.message.text, bot)
     userPhotos.delete(userId)
-  } else if (caption && caption.startsWith('/logo')) {
-    const brandName = caption.split(' ').slice(1).join(' ')
-    if (brandName) {
-      await addBrandLogo(ctx, photo, brandName)
-      userBrandLogos.delete(userId)
+  })
+
+  // Marka listesi
+  bot.command('markalar', async (ctx) => {
+    const userId = ctx.from?.id
+    
+    // Yetkilendirme kontrolü
+    if (!isAuthorized(userId)) {
+      return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
     }
-  }
-})
+    
+    try {
+      const brands = await prisma.brand.findMany({
+        orderBy: { name: 'asc' }
+      })
 
-// Ürün ekleme komutu: /urun <marka> <kategori> <isim> <fiyat>
-bot.command('urun', async (ctx) => {
-  const userId = ctx.from?.id
-  if (!userId) return
-  
-  // Yetkilendirme kontrolü
-  if (!isAuthorized(userId)) {
-    return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
-  }
+      if (brands.length === 0) {
+        return ctx.reply('Henüz marka eklenmemiş.')
+      }
 
-  // Son gönderilen fotoğrafı kontrol et
-  const lastPhotoId = userPhotos.get(userId)
-  
-  if (!lastPhotoId) {
-    return ctx.reply('Lütfen önce bir fotoğraf gönderin, sonra komutu yazın.\n\nVeya fotoğraf gönderirken caption olarak komutu yazabilirsiniz:\n/urun Nike Ayakkabı Nike Air Max 5000')
-  }
-
-  // Son fotoğrafı al
-  const photo = { file_id: lastPhotoId }
-  await addProductFromPhoto(ctx, photo, ctx.message.text)
-  userPhotos.delete(userId)
-})
-
-// Marka listesi
-bot.command('markalar', async (ctx) => {
-  const userId = ctx.from?.id
-  
-  // Yetkilendirme kontrolü
-  if (!isAuthorized(userId)) {
-    return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
-  }
-  
-  try {
-    const brands = await prisma.brand.findMany({
-      orderBy: { name: 'asc' }
-    })
-
-    if (brands.length === 0) {
-      return ctx.reply('Henüz marka eklenmemiş.')
+      const brandList = brands.map(b => `• ${b.name}`).join('\n')
+      ctx.reply(`📋 Markalar:\n\n${brandList}`)
+    } catch (error) {
+      console.error('Error:', error)
+      ctx.reply('❌ Bir hata oluştu.')
     }
+  })
 
-    const brandList = brands.map(b => `• ${b.name}`).join('\n')
-    ctx.reply(`📋 Markalar:\n\n${brandList}`)
-  } catch (error) {
-    console.error('Error:', error)
-    ctx.reply('❌ Bir hata oluştu.')
-  }
-})
+  // Kategori listesi
+  bot.command('kategoriler', async (ctx) => {
+    const userId = ctx.from?.id
+    
+    // Yetkilendirme kontrolü
+    if (!isAuthorized(userId)) {
+      return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
+    }
+    
+    try {
+      const categories = await prisma.category.findMany({
+        orderBy: { name: 'asc' }
+      })
 
-// Kategori listesi
-bot.command('kategoriler', async (ctx) => {
-  const userId = ctx.from?.id
-  
-  // Yetkilendirme kontrolü
-  if (!isAuthorized(userId)) {
-    return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
-  }
-  
-  try {
-    const categories = await prisma.category.findMany({
-      orderBy: { name: 'asc' }
-    })
+      if (categories.length === 0) {
+        return ctx.reply('Henüz kategori eklenmemiş.')
+      }
 
-    if (categories.length === 0) {
-      return ctx.reply('Henüz kategori eklenmemiş.')
+      const categoryList = categories.map(c => `• ${c.name}`).join('\n')
+      ctx.reply(`📋 Kategoriler:\n\n${categoryList}`)
+    } catch (error) {
+      console.error('Error:', error)
+      ctx.reply('❌ Bir hata oluştu.')
+    }
+  })
+
+  // Marka logosu ekleme komutu: /logo <marka>
+  bot.command('logo', async (ctx) => {
+    const userId = ctx.from?.id
+    if (!userId) return
+    
+    // Yetkilendirme kontrolü
+    if (!isAuthorized(userId)) {
+      return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
     }
 
-    const categoryList = categories.map(c => `• ${c.name}`).join('\n')
-    ctx.reply(`📋 Kategoriler:\n\n${categoryList}`)
-  } catch (error) {
-    console.error('Error:', error)
-    ctx.reply('❌ Bir hata oluştu.')
+    const args = ctx.message.text.split(' ').slice(1)
+    if (args.length === 0) {
+      return ctx.reply('Kullanım: /logo <marka>\nÖrnek: /logo Nike\n\nÖnce bir fotoğraf gönderin, sonra bu komutu yazın.\nVeya fotoğraf gönderirken caption olarak yazabilirsiniz: /logo Nike')
+    }
+
+    const brandName = args.join(' ')
+
+    // Son gönderilen fotoğrafı kontrol et
+    const lastPhotoId = userBrandLogos.get(userId)
+    
+    if (!lastPhotoId) {
+      return ctx.reply('Lütfen önce bir fotoğraf gönderin, sonra komutu yazın.\n\nVeya fotoğraf gönderirken caption olarak komutu yazabilirsiniz:\n/logo Nike')
+    }
+
+    // Son fotoğrafı al
+    const photo = { file_id: lastPhotoId }
+    await addBrandLogo(ctx, photo, brandName, bot)
+    userBrandLogos.delete(userId)
+  })
+
+  // Yardım komutu
+  bot.command('yardim', (ctx) => {
+    ctx.reply(
+      `🤖 E-Ticaret Bot Komutları:\n\n` +
+      `📦 /urun <marka> <kategori> <isim> <fiyat> - Ürün ekle (fotoğraf ile)\n` +
+      `🖼️ /logo <marka> - Marka logosu ekle/güncelle (fotoğraf ile)\n` +
+      `📋 /markalar - Tüm markaları listele\n` +
+      `📂 /kategoriler - Tüm kategorileri listele\n` +
+      `❓ /yardim - Bu yardım mesajını göster\n\n` +
+      `Örnek kullanım:\n` +
+      `1. Fotoğraf gönder\n` +
+      `2. /urun Nike Ayakkabı Nike Air Max 5000\n\n` +
+      `Marka logosu için:\n` +
+      `1. Logo fotoğrafı gönder\n` +
+      `2. /logo Nike`
+    )
+  })
+}
+
+// Bot instance'ı al (lazy load)
+export function getBot(): Telegraf {
+  if (!botInstance) {
+    if (!process.env.TELEGRAM_BOT_TOKEN) {
+      throw new Error('TELEGRAM_BOT_TOKEN is not set')
+    }
+    botInstance = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
+    setupBotHandlers(botInstance)
   }
-})
+  return botInstance
+}
 
-// Marka logosu ekleme komutu: /logo <marka>
-bot.command('logo', async (ctx) => {
-  const userId = ctx.from?.id
-  if (!userId) return
-  
-  // Yetkilendirme kontrolü
-  if (!isAuthorized(userId)) {
-    return ctx.reply('❌ Bu botu kullanma yetkiniz yok.')
-  }
-
-  const args = ctx.message.text.split(' ').slice(1)
-  if (args.length === 0) {
-    return ctx.reply('Kullanım: /logo <marka>\nÖrnek: /logo Nike\n\nÖnce bir fotoğraf gönderin, sonra bu komutu yazın.\nVeya fotoğraf gönderirken caption olarak yazabilirsiniz: /logo Nike')
-  }
-
-  const brandName = args.join(' ')
-
-  // Son gönderilen fotoğrafı kontrol et
-  const lastPhotoId = userBrandLogos.get(userId)
-  
-  if (!lastPhotoId) {
-    return ctx.reply('Lütfen önce bir fotoğraf gönderin, sonra komutu yazın.\n\nVeya fotoğraf gönderirken caption olarak komutu yazabilirsiniz:\n/logo Nike')
-  }
-
-  // Son fotoğrafı al
-  const photo = { file_id: lastPhotoId }
-  await addBrandLogo(ctx, photo, brandName)
-  userBrandLogos.delete(userId)
-})
-
-// Yardım komutu
-bot.command('yardim', (ctx) => {
-  ctx.reply(
-    `🤖 E-Ticaret Bot Komutları:\n\n` +
-    `📦 /urun <marka> <kategori> <isim> <fiyat> - Ürün ekle (fotoğraf ile)\n` +
-    `🖼️ /logo <marka> - Marka logosu ekle/güncelle (fotoğraf ile)\n` +
-    `📋 /markalar - Tüm markaları listele\n` +
-    `📂 /kategoriler - Tüm kategorileri listele\n` +
-    `❓ /yardim - Bu yardım mesajını göster\n\n` +
-    `Örnek kullanım:\n` +
-    `1. Fotoğraf gönder\n` +
-    `2. /urun Nike Ayakkabı Nike Air Max 5000\n\n` +
-    `Marka logosu için:\n` +
-    `1. Logo fotoğrafı gönder\n` +
-    `2. /logo Nike`
-  )
-})
-
-export default bot
-
+// Default export (polling için)
+export default function createBot() {
+  return getBot()
+}
