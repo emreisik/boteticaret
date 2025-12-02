@@ -2,6 +2,9 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getProduct(id: string) {
   return await prisma.product.findUnique({
     where: { id },

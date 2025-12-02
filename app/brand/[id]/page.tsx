@@ -3,6 +3,9 @@ import Header from '@/components/Header'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getBrandProducts(brandId: string) {
   const brand = await prisma.brand.findUnique({
     where: { id: brandId },
