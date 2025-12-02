@@ -83,6 +83,12 @@ export default async function ProductsPage() {
                   </div>
                   <div className="flex gap-2">
                     <Link
+                      href={`/admin/products/${product.id}/variants`}
+                      className="flex-1 bg-purple-100 text-purple-700 px-4 py-2 rounded hover:bg-purple-200 transition-colors text-center text-sm"
+                    >
+                      Varyantlar
+                    </Link>
+                    <Link
                       href={`/admin/products/${product.id}/edit`}
                       className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors text-center"
                     >
