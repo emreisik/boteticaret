@@ -56,6 +56,7 @@ export async function PUT(
     const brandId = formData.get('brandId') as string
     const categoryId = formData.get('categoryId') as string
     const imageFile = formData.get('image') as File | null
+    const variantsJson = formData.get('variants') as string
 
     if (!name || !price) {
       return NextResponse.json({ error: 'Ürün adı ve fiyat gerekli' }, { status: 400 })
@@ -111,6 +112,29 @@ export async function PUT(
         categoryId: categoryId || existingProduct.categoryId,
       },
     })
+
+    // Add new variants if provided (existing variants are kept)
+    if (variantsJson) {
+      try {
+        const variants = JSON.parse(variantsJson)
+        if (Array.isArray(variants) && variants.length > 0) {
+          await Promise.all(
+            variants.map((variant: any) =>
+              prisma.productVariant.create({
+                data: {
+                  productId: product.id,
+                  color: variant.color,
+                  sizes: JSON.stringify(variant.sizes),
+                  stock: variant.stock || 0,
+                },
+              })
+            )
+          )
+        }
+      } catch (error) {
+        console.error('Error creating variants:', error)
+      }
+    }
 
     return NextResponse.json(product)
   } catch (error) {
