@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 type Brand = {
-  id: number
+  id: string
   name: string
   logo: string | null
 }

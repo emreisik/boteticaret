@@ -10,8 +10,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const productId = parseInt(id)
+    const { id: productId } = await params
 
     // Get product to delete image file
     const product = await prisma.product.findUnique({
@@ -49,8 +48,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const productId = parseInt(id)
+    const { id: productId } = await params
     const formData = await request.formData()
     
     const name = formData.get('name') as string
@@ -107,10 +105,10 @@ export async function PUT(
       where: { id: productId },
       data: {
         name,
-        price,
+        price: parseFloat(price),
         image: imagePath,
-        brandId: brandId ? parseInt(brandId) : null,
-        categoryId: categoryId ? parseInt(categoryId) : null,
+        brandId: brandId || existingProduct.brandId,
+        categoryId: categoryId || existingProduct.categoryId,
       },
     })
 

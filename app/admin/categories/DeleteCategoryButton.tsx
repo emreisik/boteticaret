@@ -8,7 +8,7 @@ export default function DeleteCategoryButton({
   categoryName, 
   productCount 
 }: { 
-  categoryId: number
+  categoryId: string
   categoryName: string
   productCount: number
 }) {

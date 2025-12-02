@@ -6,9 +6,8 @@ export const dynamic = 'force-dynamic'
 
 async function getCategory(id: string) {
   try {
-    const categoryId = parseInt(id)
     const category = await prisma.category.findUnique({
-      where: { id: categoryId },
+      where: { id },
     })
     return category
   } catch (error) {

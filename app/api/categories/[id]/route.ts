@@ -8,8 +8,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const categoryId = parseInt(id)
+    const { id: categoryId } = await params
 
     // Check if category has products
     const productCount = await prisma.product.count({
@@ -40,8 +39,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const categoryId = parseInt(id)
+    const { id: categoryId } = await params
     const body = await request.json()
     const { name, slug } = body
 

@@ -6,23 +6,23 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 type Brand = {
-  id: number
+  id: string
   name: string
 }
 
 type Category = {
-  id: number
+  id: string
   name: string
   slug: string
 }
 
 type Product = {
-  id: number
+  id: string
   name: string
   price: string
   image: string | null
-  brandId: number | null
-  categoryId: number | null
+  brandId: string | null
+  categoryId: string | null
 }
 
 type ProductFormProps = {

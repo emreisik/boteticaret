@@ -8,7 +8,7 @@ export default function DeleteBrandButton({
   brandName, 
   productCount 
 }: { 
-  brandId: number
+  brandId: string
   brandName: string
   productCount: number
 }) {

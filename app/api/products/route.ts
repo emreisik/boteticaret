@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
     const product = await prisma.product.create({
       data: {
         name,
-        price,
-        image: imagePath,
-        brandId: brandId ? parseInt(brandId) : null,
-        categoryId: categoryId ? parseInt(categoryId) : null,
+        price: parseFloat(price),
+        image: imagePath || '',
+        brandId: brandId || '',
+        categoryId: categoryId || '',
       },
     })
 

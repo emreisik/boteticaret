@@ -6,9 +6,8 @@ export const dynamic = 'force-dynamic'
 
 async function getBrand(id: string) {
   try {
-    const brandId = parseInt(id)
     const brand = await prisma.brand.findUnique({
-      where: { id: brandId },
+      where: { id },
     })
     return brand
   } catch (error) {
