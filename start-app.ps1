@@ -37,6 +37,6 @@ if ($port3000) {
 }
 
 Write-Host ""
-Write-Host "Process'leri görmek için: Get-Process node" -ForegroundColor Gray
-Write-Host "Durdurmak için: Stop-Process -Name node -Force" -ForegroundColor Gray
+Write-Host "Processleri gormek icin: Get-Process node" -ForegroundColor Gray
+Write-Host "Durdurmak icin: Stop-Process -Name node -Force" -ForegroundColor Gray
 
