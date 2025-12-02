@@ -4,10 +4,10 @@ import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-async function getCategory(id: number) {
+async function getCategory(id: string) {
   try {
     const category = await prisma.category.findUnique({
-      where: { id },
+      where: { id: parseInt(id) },
     })
     return category
   } catch (error) {
@@ -18,8 +18,7 @@ async function getCategory(id: number) {
 
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const categoryId = parseInt(id)
-  const category = await getCategory(categoryId)
+  const category = await getCategory(id)
 
   if (!category) {
     notFound()

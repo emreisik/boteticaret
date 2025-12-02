@@ -4,10 +4,10 @@ import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-async function getBrand(id: number) {
+async function getBrand(id: string) {
   try {
     const brand = await prisma.brand.findUnique({
-      where: { id },
+      where: { id: parseInt(id) },
     })
     return brand
   } catch (error) {
@@ -18,8 +18,7 @@ async function getBrand(id: number) {
 
 export default async function EditBrandPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const brandId = parseInt(id)
-  const brand = await getBrand(brandId)
+  const brand = await getBrand(id)
 
   if (!brand) {
     notFound()

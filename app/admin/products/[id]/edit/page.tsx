@@ -4,11 +4,11 @@ import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-async function getProductAndData(id: number) {
+async function getProductAndData(id: string) {
   try {
     const [product, brands, categories] = await Promise.all([
       prisma.product.findUnique({
-        where: { id },
+        where: { id: parseInt(id) },
       }),
       prisma.brand.findMany({ orderBy: { name: 'asc' } }),
       prisma.category.findMany({ orderBy: { name: 'asc' } }),
@@ -27,8 +27,7 @@ async function getProductAndData(id: number) {
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const productId = parseInt(id)
-  const data = await getProductAndData(productId)
+  const data = await getProductAndData(id)
 
   if (!data) {
     notFound()
