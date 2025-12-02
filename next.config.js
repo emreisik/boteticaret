@@ -18,6 +18,9 @@ const nextConfig = {
   serverRuntimeConfig: {
     maxDuration: 30,
   },
+  // Optimize for production
+  reactStrictMode: false,
+  swcMinify: true,
 }
 
 module.exports = nextConfig

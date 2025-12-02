@@ -6,13 +6,19 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 async function getProduct(id: string) {
-  return await prisma.product.findUnique({
-    where: { id },
-    include: {
-      brand: true,
-      category: true
-    }
-  })
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        brand: true,
+        category: true
+      }
+    })
+    return product
+  } catch (error) {
+    console.error('Error fetching product:', error)
+    return null
+  }
 }
 
 export default async function ProductPage({
