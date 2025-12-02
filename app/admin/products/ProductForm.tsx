@@ -19,7 +19,7 @@ type Category = {
 type Product = {
   id: string
   name: string
-  price: string
+  price: number
   image: string | null
   brandId: string | null
   categoryId: string | null
@@ -38,9 +38,9 @@ export default function ProductForm({ brands, categories, product }: ProductForm
   
   const [formData, setFormData] = useState({
     name: product?.name || '',
-    price: product?.price || '',
-    brandId: product?.brandId?.toString() || '',
-    categoryId: product?.categoryId?.toString() || '',
+    price: product?.price?.toString() || '',
+    brandId: product?.brandId || '',
+    categoryId: product?.categoryId || '',
   })
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
