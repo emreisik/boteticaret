@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     const brandId = formData.get('brandId') as string
     const categoryId = formData.get('categoryId') as string
     const imageFile = formData.get('image') as File | null
+    const variantsJson = formData.get('variants') as string
 
     if (!name || !price) {
       return NextResponse.json({ error: 'Ürün adı ve fiyat gerekli' }, { status: 400 })
@@ -26,12 +27,10 @@ export async function POST(request: NextRequest) {
       const bytes = await imageFile.arrayBuffer()
       const buffer = Buffer.from(bytes)
 
-      // Create unique filename
       const timestamp = Date.now()
       const filename = `${timestamp}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products')
       
-      // Ensure directory exists
       await mkdir(uploadDir, { recursive: true })
       
       const filepath = path.join(uploadDir, filename)
@@ -50,6 +49,29 @@ export async function POST(request: NextRequest) {
         categoryId: categoryId || '',
       },
     })
+
+    // Create variants if provided
+    if (variantsJson) {
+      try {
+        const variants = JSON.parse(variantsJson)
+        if (Array.isArray(variants) && variants.length > 0) {
+          await Promise.all(
+            variants.map((variant: any) =>
+              prisma.productVariant.create({
+                data: {
+                  productId: product.id,
+                  color: variant.color,
+                  sizes: JSON.stringify(variant.sizes),
+                  stock: variant.stock || 0,
+                },
+              })
+            )
+          )
+        }
+      } catch (error) {
+        console.error('Error creating variants:', error)
+      }
+    }
 
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
