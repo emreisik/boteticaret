@@ -7,18 +7,23 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 async function getBrandProducts(brandId: string) {
-  const brand = await prisma.brand.findUnique({
-    where: { id: brandId },
-    include: {
-      products: {
-        include: {
-          category: true
-        },
-        orderBy: { createdAt: 'desc' }
+  try {
+    const brand = await prisma.brand.findUnique({
+      where: { id: brandId },
+      include: {
+        products: {
+          include: {
+            category: true
+          },
+          orderBy: { createdAt: 'desc' }
+        }
       }
-    }
-  })
-  return brand
+    })
+    return brand
+  } catch (error) {
+    console.error('Error fetching brand:', error)
+    return null
+  }
 }
 
 export default async function BrandPage({

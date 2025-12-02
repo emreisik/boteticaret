@@ -7,19 +7,6 @@ const globalForPrisma = globalThis as unknown as {
 
 const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-  // Connection pool settings for MySQL
-  // Prevent connection exhaustion
-  connection_limit: 10,
-  pool: {
-    min: 2,
-    max: 10,
-    idleTimeoutMillis: 30000,
-  },
 })
 
 if (process.env.NODE_ENV !== 'production') {

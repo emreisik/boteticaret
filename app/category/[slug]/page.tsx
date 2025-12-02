@@ -2,19 +2,27 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getCategoryProducts(slug: string) {
-  const category = await prisma.category.findUnique({
-    where: { slug },
-    include: {
-      products: {
-        include: {
-          brand: true
-        },
-        orderBy: { createdAt: 'desc' }
+  try {
+    const category = await prisma.category.findUnique({
+      where: { slug },
+      include: {
+        products: {
+          include: {
+            brand: true
+          },
+          orderBy: { createdAt: 'desc' }
+        }
       }
-    }
-  })
-  return category
+    })
+    return category
+  } catch (error) {
+    console.error('Error fetching category:', error)
+    return null
+  }
 }
 
 export default async function CategoryPage({
