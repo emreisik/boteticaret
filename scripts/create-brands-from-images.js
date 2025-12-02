@@ -54,15 +54,11 @@ async function createBrandsFromImages() {
       const imagePath = `/images/brands/${file}`
 
       try {
-        // Markayı bul veya oluştur
-        const existingBrand = await prisma.brand.findFirst({
-          where: {
-            name: {
-              equals: brandName,
-              mode: 'insensitive'
-            }
-          }
-        })
+        // Tüm markaları al ve case-insensitive karşılaştır
+        const allBrands = await prisma.brand.findMany()
+        const existingBrand = allBrands.find(b => 
+          b.name.toLowerCase() === brandName.toLowerCase()
+        )
 
         if (existingBrand) {
           // Marka varsa logo'yu güncelle
