@@ -25,8 +25,9 @@ async function getProductAndData(id: number) {
   }
 }
 
-export default async function EditProductPage({ params }: { params: { id: string } }) {
-  const productId = parseInt(params.id)
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const productId = parseInt(id)
   const data = await getProductAndData(productId)
 
   if (!data) {

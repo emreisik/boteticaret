@@ -16,8 +16,9 @@ async function getCategory(id: number) {
   }
 }
 
-export default async function EditCategoryPage({ params }: { params: { id: string } }) {
-  const categoryId = parseInt(params.id)
+export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const categoryId = parseInt(id)
   const category = await getCategory(categoryId)
 
   if (!category) {

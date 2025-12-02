@@ -16,8 +16,9 @@ async function getBrand(id: number) {
   }
 }
 
-export default async function EditBrandPage({ params }: { params: { id: string } }) {
-  const brandId = parseInt(params.id)
+export default async function EditBrandPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const brandId = parseInt(id)
   const brand = await getBrand(brandId)
 
   if (!brand) {

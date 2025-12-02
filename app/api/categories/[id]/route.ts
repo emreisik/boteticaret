@@ -5,10 +5,11 @@ export const dynamic = 'force-dynamic'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const categoryId = parseInt(params.id)
+    const { id } = await params
+    const categoryId = parseInt(id)
 
     // Check if category has products
     const productCount = await prisma.product.count({
@@ -36,10 +37,11 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const categoryId = parseInt(params.id)
+    const { id } = await params
+    const categoryId = parseInt(id)
     const body = await request.json()
     const { name, slug } = body
 

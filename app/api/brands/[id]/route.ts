@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const brandId = parseInt(params.id)
+    const { id } = await params
+    const brandId = parseInt(id)
 
     // Check if brand has products
     const productCount = await prisma.product.count({
@@ -57,10 +58,11 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const brandId = parseInt(params.id)
+    const { id } = await params
+    const brandId = parseInt(id)
     const formData = await request.formData()
     
     const name = formData.get('name') as string

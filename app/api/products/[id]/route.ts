@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = parseInt(params.id)
+    const { id } = await params
+    const productId = parseInt(id)
 
     // Get product to delete image file
     const product = await prisma.product.findUnique({
@@ -45,10 +46,11 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = parseInt(params.id)
+    const { id } = await params
+    const productId = parseInt(id)
     const formData = await request.formData()
     
     const name = formData.get('name') as string
