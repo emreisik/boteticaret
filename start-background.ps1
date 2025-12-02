@@ -1,29 +1,46 @@
-# Arka planda uygulamayi baslat
-$ErrorActionPreference = "Continue"
+# Start in background using job
+cd C:\Users\Administrator\boteticaret
 
-Set-Location "C:\Users\Administrator\boteticaret"
+Write-Host "Stopping existing processes..." -ForegroundColor Yellow
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 3
 
-# Eski process'leri durdur
-Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 2
+Write-Host "Starting application in background..." -ForegroundColor Cyan
 
-# Next.js'i baslat
-$job1 = Start-Job -ScriptBlock {
-    Set-Location "C:\Users\Administrator\boteticaret"
-    npm start
+# Use PowerShell job to run in background
+$job = Start-Job -ScriptBlock {
+    Set-Location C:\Users\Administrator\boteticaret
+    $env:NODE_ENV = "production"
+    & npm start 2>&1 | Out-File -FilePath "C:\Users\Administrator\boteticaret\app-output.log" -Append
 }
 
-# Bot'u baslat
-$job2 = Start-Job -ScriptBlock {
-    Set-Location "C:\Users\Administrator\boteticaret"
-    npm run bot
-}
+Write-Host "Job started with ID: $($job.Id)" -ForegroundColor Green
+Start-Sleep -Seconds 20
 
-Write-Host "Uygulamalar baslatildi. Job ID'ler:" -ForegroundColor Green
-Write-Host "Next.js: $($job1.Id)" -ForegroundColor Cyan
-Write-Host "Bot: $($job2.Id)" -ForegroundColor Cyan
-
+# Check status
 Write-Host ""
-Write-Host "Durum kontrol etmek icin: Get-Job" -ForegroundColor Gray
-Write-Host "Loglar icin: Receive-Job -Id <JobId>" -ForegroundColor Gray
-
+Write-Host "Checking status..." -ForegroundColor Cyan
+Get-Process node -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, StartTime | Format-Table
+$conn = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
+if ($conn) {
+    Write-Host "Port 3000 is listening!" -ForegroundColor Green
+    try {
+        $response = Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing -TimeoutSec 10
+        Write-Host "Site is responding - Status: $($response.StatusCode)" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Green
+        Write-Host "  APPLICATION RUNNING" -ForegroundColor Green
+        Write-Host "========================================" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "CANLI LINK: http://77.245.158.179:3000" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "To check logs: Get-Content app-output.log -Tail 20" -ForegroundColor Yellow
+        Write-Host "To stop: Get-Job | Remove-Job -Force; Get-Process node | Stop-Process -Force" -ForegroundColor Yellow
+    } catch {
+        Write-Host "Port is open but site not responding: $($_.Exception.Message)" -ForegroundColor Red
+    }
+} else {
+    Write-Host "Port 3000 is NOT listening - check logs" -ForegroundColor Red
+    Write-Host "Last 20 lines of log:" -ForegroundColor Yellow
+    Get-Content app-output.log -Tail 20
+}
