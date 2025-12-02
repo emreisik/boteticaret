@@ -9,6 +9,15 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Prevent memory issues
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000, // 1 minute
+    pagesBufferLength: 5,
+  },
+  // Increase timeout for long-running requests
+  serverRuntimeConfig: {
+    maxDuration: 30,
+  },
 }
 
 module.exports = nextConfig
