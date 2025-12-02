@@ -1,0 +1,12 @@
+node_modules
+.next
+.env
+.env.local
+.git
+.gitignore
+README.md
+netlify-deploy.md
+railway-deploy.md
+*.log
+.DS_Store
+
