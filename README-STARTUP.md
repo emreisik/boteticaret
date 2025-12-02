@@ -44,3 +44,4 @@ Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing
 - Port 3000 kapalıysa otomatik olarak yeniden başlatır
 - Windows Task Scheduler ile sistem başladığında otomatik başlatılabilir
 
+

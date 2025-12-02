@@ -20,3 +20,4 @@ Write-Host ""
 # Run directly - this will keep the window open
 & npm start 2>&1 | Tee-Object -FilePath "C:\Users\Administrator\boteticaret\app-output.log" -Append
 
+

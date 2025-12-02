@@ -13,7 +13,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr">
-      <body>{children}</body>
+      <body>
+        <nav className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16 items-center">
+              <a href="/" className="text-xl font-bold text-gray-900">
+                Bot E-Ticaret
+              </a>
+              <a
+                href="/admin"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Yönetim Paneli
+              </a>
+            </div>
+          </div>
+        </nav>
+        {children}
+      </body>
     </html>
   )
 }
