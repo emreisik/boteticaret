@@ -15,8 +15,8 @@ $env:NODE_ENV = "production"
 $env:PORT = "3000"
 $env:HOSTNAME = "0.0.0.0"
 
-# Start in background
-Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd C:\Users\Administrator\boteticaret; $env:NODE_ENV="production"; $env:PORT="3000"; $env:HOSTNAME="0.0.0.0"; npm start' -WindowStyle Hidden
+# Start in background using npm start (which uses package.json script)
+Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd C:\Users\Administrator\boteticaret; $env:NODE_ENV="production"; npm start' -WindowStyle Hidden
 
 Start-Sleep -Seconds 10
 

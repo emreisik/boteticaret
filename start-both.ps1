@@ -1,7 +1,7 @@
 # Start both Next.js app and Telegram bot
 cd C:\Users\Administrator\boteticaret
 
-# Start Next.js app
+# Start Next.js app using npm start
 Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd C:\Users\Administrator\boteticaret; $env:NODE_ENV="production"; npm start' -WindowStyle Hidden
 
 # Wait a bit
