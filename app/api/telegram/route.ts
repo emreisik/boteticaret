@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getBot } from '@/lib/telegram'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic import - sadece runtime'da yükle
+    const { getBot } = await import('@/lib/telegram')
     const body = await request.json()
     const bot = getBot()
     await bot.handleUpdate(body)

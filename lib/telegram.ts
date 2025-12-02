@@ -1,7 +1,12 @@
 import { Telegraf, Context } from 'telegraf'
-import { prisma } from './prisma'
 import fs from 'fs-extra'
 import path from 'path'
+
+// Prisma'yı lazy load et - build sırasında yüklenmesin
+async function getPrisma() {
+  const { prisma } = await import('./prisma')
+  return prisma
+}
 
 // Bot'u lazy load et - sadece runtime'da yükle
 let botInstance: Telegraf | null = null
@@ -21,6 +26,7 @@ const userBrandLogos = new Map<number, string>()
 // Fotoğraf ile ürün ekleme fonksiyonu
 async function addProductFromPhoto(ctx: Context, photo: { file_id: string }, commandText: string, bot: Telegraf) {
   try {
+    const prisma = await getPrisma()
     const args = commandText.split(' ').slice(1)
     
     if (args.length < 4) {
@@ -98,6 +104,7 @@ async function addProductFromPhoto(ctx: Context, photo: { file_id: string }, com
 // Marka logosu ekleme fonksiyonu
 async function addBrandLogo(ctx: Context, photo: { file_id: string }, brandName: string, bot: Telegraf) {
   try {
+    const prisma = await getPrisma()
     // Markayı bul (case-insensitive)
     const allBrands = await prisma.brand.findMany()
     const brand = allBrands.find(b => b.name.toLowerCase() === brandName.toLowerCase())
@@ -210,6 +217,7 @@ function setupBotHandlers(bot: Telegraf) {
     }
     
     try {
+      const prisma = await getPrisma()
       const brands = await prisma.brand.findMany({
         orderBy: { name: 'asc' }
       })
@@ -236,6 +244,7 @@ function setupBotHandlers(bot: Telegraf) {
     }
     
     try {
+      const prisma = await getPrisma()
       const categories = await prisma.category.findMany({
         orderBy: { name: 'asc' }
       })
