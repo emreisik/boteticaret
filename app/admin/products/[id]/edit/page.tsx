@@ -6,9 +6,10 @@ export const dynamic = 'force-dynamic'
 
 async function getProductAndData(id: string) {
   try {
+    const productId = parseInt(id)
     const [product, brands, categories] = await Promise.all([
       prisma.product.findUnique({
-        where: { id: parseInt(id) },
+        where: { id: productId },
       }),
       prisma.brand.findMany({ orderBy: { name: 'asc' } }),
       prisma.category.findMany({ orderBy: { name: 'asc' } }),
