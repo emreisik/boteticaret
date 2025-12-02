@@ -6,14 +6,19 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 async function getCategories() {
-  return await prisma.category.findMany({
-    orderBy: { name: 'asc' },
-    include: {
-      _count: {
-        select: { products: true }
+  try {
+    return await prisma.category.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: { products: true }
+        }
       }
-    }
-  })
+    })
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    return []
+  }
 }
 
 export default async function CategoriesPage() {
