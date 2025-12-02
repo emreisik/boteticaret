@@ -1,18 +1,17 @@
 #!/bin/bash
-# Windows Sunucuya Hızlı Deploy
-# Kullanım: ./deploy-now.sh
+# Windows Sunucuya SSH ile Deploy
+# Kullanım: ./deploy-via-ssh.sh
 
 SERVER_IP="77.245.158.179"
 SERVER_PORT="2222"
 SERVER_USER="Administrator"
-SERVER_PATH="C:/inetpub/wwwroot"
 
 echo "🚀 Windows Sunucuya Deploy Başlatılıyor..."
 echo "📡 Sunucu: $SERVER_IP:$SERVER_PORT"
 echo ""
 
-# SSH ile bağlan
-ssh -p $SERVER_PORT $SERVER_USER@$SERVER_IP << 'ENDSSH'
+# SSH ile bağlan ve komutları çalıştır
+ssh $SERVER_USER@$SERVER_IP -p $SERVER_PORT << 'ENDSSH'
 # Proje klasörüne git
 cd C:/inetpub/wwwroot
 

@@ -2,7 +2,8 @@
 
 ## Sunucu Bilgileri
 - **IP:** 77.245.158.179
-- **Port:** 33789
+- **SSH Port:** 2222
+- **RDP Port:** 33789
 - **User:** Administrator
 - **Password:** P4fLf!DGez@0L1
 

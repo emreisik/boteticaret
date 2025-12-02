@@ -2,7 +2,7 @@
 # Kullanım: .\deploy-remote.ps1
 
 $serverIP = "77.245.158.179"
-$serverPort = "33789"
+$serverPort = "2222"
 $serverUser = "Administrator"
 $serverPass = "P4fLf!DGez@0L1"
 $serverPath = "C:\inetpub\wwwroot\boteticaret"

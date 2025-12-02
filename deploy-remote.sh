@@ -3,7 +3,7 @@
 # Kullanım: ./deploy-remote.sh
 
 SERVER_IP="77.245.158.179"
-SERVER_PORT="33789"
+SERVER_PORT="2222"
 SERVER_USER="Administrator"
 SERVER_PASS="P4fLf!DGez@0L1"
 SERVER_PATH="C:/inetpub/wwwroot/boteticaret"
