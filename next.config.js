@@ -6,22 +6,32 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb',
+      bodySizeLimit: '10mb',
     },
   },
-  // Prevent memory issues
+  // Ensure static files are served correctly
+  async headers() {
+    return [
+      {
+        source: '/uploads/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
   onDemandEntries: {
-    maxInactiveAge: 60 * 1000, // 1 minute
+    maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,
   },
-  // Increase timeout for long-running requests
   serverRuntimeConfig: {
-    maxDuration: 30,
+    maxDuration: 60,
   },
-  // Optimize for production
   reactStrictMode: false,
   swcMinify: true,
 }
 
 module.exports = nextConfig
-
